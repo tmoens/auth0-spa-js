@@ -16,6 +16,10 @@
     <button id="login_redirect_callback">Login redirect callback</button>
     <button id="getUser">Get user</button>
     <button id="getToken">Get access token with no interaction</button>
+    <button id="getTokensConcurrently">Get two tokens concurrently</button>
+    <button id="getTokenIgnoreCache">
+      Get access token, ignoring the cache
+    </button>
     <button id="getTokenPopup">Get access token with a popup</button>
     <button id="getToken_audience">
       Get access token for a different audience
@@ -25,8 +29,9 @@
     <script type="text/javascript">
       $(function() {
         createAuth0Client({
-          domain: 'auth.brucke.club',
-          client_id: 'wLSIP47wM39wKdDmOj6Zb5eSEw3JVhVp'
+          domain: 'brucke.auth0.com',
+          client_id: 'wLSIP47wM39wKdDmOj6Zb5eSEw3JVhVp',
+          audience: 'http://localhost/'
         })
           .then(function(auth0) {
             window.auth0 = auth0;
@@ -59,12 +64,26 @@
               });
             });
             $('#getToken').click(function() {
+              auth0.getTokenSilently().then(function(token) {
+                console.log(token);
+              });
+            });
+            $('#getTokensConcurrently').click(function() {
               Promise.all([
-                auth0.getTokenSilently({ ignoreCache: true }),
+                auth0.getTokenSilently({
+                  ignoreCache: true
+                }),
                 auth0.getTokenSilently({ ignoreCache: true })
               ]).then(function(tokens) {
                 console.log(tokens[0], tokens[1]);
               });
+            });
+            $('#getTokenIgnoreCache').click(function() {
+              auth0
+                .getTokenSilently({ ignoreCache: true })
+                .then(function(token) {
+                  console.log(token);
+                });
             });
             $('#getTokenPopup').click(function() {
               auth0
