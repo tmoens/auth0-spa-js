@@ -329,7 +329,15 @@ export default class Auth0Client {
       ignoreCache: false
     }
   ) {
+    options = {
+      audience: this.options.audience,
+      scope: this.options.scope,
+      ...options
+    };
+
+    console.log(options, this.DEFAULT_SCOPE);
     options.scope = getUniqueScopes(this.DEFAULT_SCOPE, options.scope);
+    console.log(options);
 
     try {
       await lock.acquireLock(GET_TOKEN_SILENTLY_LOCK_KEY, 5000);

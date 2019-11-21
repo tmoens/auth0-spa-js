@@ -163,7 +163,17 @@ interface getIdTokenClaimsOptions {
   audience: string;
 }
 
-interface GetTokenSilentlyOptions extends GetUserOptions {
+interface GetTokenSilentlyOptions {
+  /**
+   * The scope that was used in the authentication request
+   */
+  scope?: string;
+
+  /**
+   * The audience that was used in the authentication request
+   */
+  audience?: string;
+
   /**
    * When `true`, ignores the cache and always sends a
    * request to Auth0.

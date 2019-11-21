@@ -39,7 +39,7 @@ const DEFAULT_POPUP_CONFIG_OPTIONS: PopupConfigOptions = {
   timeoutInSeconds: DEFAULT_AUTHORIZE_TIMEOUT_IN_SECONDS
 };
 
-const setup = async (options = {}) => {
+const setup = async (options: Partial<Auth0ClientOptions> = {}) => {
   const auth0 = await createAuth0Client({
     domain: TEST_DOMAIN,
     client_id: TEST_CLIENT_ID,
@@ -57,7 +57,7 @@ const setup = async (options = {}) => {
   const transactionManager = getInstance('../src/transaction-manager');
   const utils = require('../src/utils');
   utils.createQueryParams.mockReturnValue(TEST_QUERY_PARAMS);
-  utils.getUniqueScopes.mockReturnValue(TEST_SCOPES);
+  utils.getUniqueScopes.mockReturnValue(options.scope || TEST_SCOPES);
   utils.encodeState.mockReturnValue(TEST_ENCODED_STATE);
   utils.createRandomString.mockReturnValue(TEST_RANDOM_STRING);
   utils.sha256.mockReturnValue(Promise.resolve(TEST_ARRAY_BUFFER));
@@ -1137,6 +1137,7 @@ describe('Auth0', () => {
         const { auth0, utils } = await setup();
 
         await auth0.getTokenSilently(defaultOptionsIgnoreCacheTrue);
+
         expect(utils.createQueryParams).toHaveBeenCalledWith({
           audience: defaultOptionsIgnoreCacheTrue.audience,
           client_id: TEST_CLIENT_ID,
@@ -1151,10 +1152,35 @@ describe('Auth0', () => {
           code_challenge_method: 'S256'
         });
       });
+
+      it('creates correct query params from the initial client options', async () => {
+        const { auth0, utils } = await setup({
+          audience: 'some-api-identifier',
+          scope: 'new:scope'
+        });
+
+        await auth0.getTokenSilently({ ignoreCache: true });
+
+        expect(utils.createQueryParams).toHaveBeenCalledWith({
+          audience: 'some-api-identifier',
+          client_id: TEST_CLIENT_ID,
+          scope: 'new:scope',
+          response_type: TEST_CODE,
+          response_mode: 'web_message',
+          prompt: 'none',
+          state: TEST_ENCODED_STATE,
+          nonce: TEST_RANDOM_STRING,
+          redirect_uri: 'http://localhost',
+          code_challenge: TEST_BASE64_ENCODED_STRING,
+          code_challenge_method: 'S256'
+        });
+      });
+
       it('creates correct query params without leeway', async () => {
         const { auth0, utils } = await setup({ leeway: 10 });
 
         await auth0.getTokenSilently(defaultOptionsIgnoreCacheTrue);
+
         expect(utils.createQueryParams).toHaveBeenCalledWith({
           audience: defaultOptionsIgnoreCacheTrue.audience,
           client_id: TEST_CLIENT_ID,
@@ -1190,14 +1216,16 @@ describe('Auth0', () => {
           code_challenge_method: 'S256'
         });
       });
+
       it('creates correct query params with custom params', async () => {
         const { auth0, utils } = await setup();
 
         await auth0.getTokenSilently(defaultOptionsIgnoreCacheTrue);
+
         expect(utils.createQueryParams).toHaveBeenCalledWith({
           audience: defaultOptionsIgnoreCacheTrue.audience,
           client_id: TEST_CLIENT_ID,
-          scope: TEST_SCOPES,
+          scope: defaultOptionsIgnoreCacheTrue.scope,
           response_type: TEST_CODE,
           response_mode: 'web_message',
           prompt: 'none',
@@ -1207,12 +1235,14 @@ describe('Auth0', () => {
           code_challenge: TEST_BASE64_ENCODED_STRING,
           code_challenge_method: 'S256'
         });
+
         expect(utils.getUniqueScopes).toHaveBeenCalledWith(
           'openid profile email',
           undefined,
           defaultOptionsIgnoreCacheTrue.scope
         );
       });
+
       it('opens iframe with correct urls', async () => {
         const { auth0, utils } = await setup();
         await auth0.getTokenSilently(defaultOptionsIgnoreCacheTrue);
