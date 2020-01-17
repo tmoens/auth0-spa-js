@@ -1,6 +1,9 @@
 import fetch from 'unfetch';
 
-import { DEFAULT_AUTHORIZE_TIMEOUT_IN_SECONDS } from './constants';
+import {
+  DEFAULT_AUTHORIZE_TIMEOUT_IN_SECONDS,
+  DEFAULT_SILENT_TOKEN_RETRY_COUNT
+} from './constants';
 
 const dedupe = arr => arr.filter((x, i) => arr.indexOf(x) === i);
 
@@ -176,7 +179,7 @@ export const bufferToBase64UrlEncoded = input => {
 const getJSON = async (url, options) => {
   let fetchError, response;
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < DEFAULT_SILENT_TOKEN_RETRY_COUNT; i++) {
     try {
       response = await fetch(url, options);
       fetchError = null;
