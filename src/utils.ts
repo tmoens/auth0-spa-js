@@ -192,7 +192,7 @@ export const oauthToken = async ({ baseUrl, ...options }: OAuthTokenOptions) =>
     method: 'POST',
     body: JSON.stringify({
       grant_type: 'authorization_code',
-      redirect_uri: window.location.origin,
+      redirect_uri: options.redirect_uri || window.location.origin,
       ...options
     }),
     headers: {
